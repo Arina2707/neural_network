@@ -72,19 +72,21 @@ def train_net_process(model, data, optimizer, criterion, epochs, show_plot):
     print('Training net with {} epochs and {} train cases'.format(epochs, data.dataset.tensors[0].shape[0]))
 
     for epoch in range(epochs):
-        # For each batch
         for x, y in data:
+            print(x.shape)
+            print(y.shape)
             preds = model(x)
-            loss = criterion(y, preds)
+            loss = criterion(y.unsqueeze(1), preds)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
         x, y = data.dataset.tensors
-
+        print(x.shape)
+        print(y.shape)
         with torch.no_grad():
             model.fit_coeffs(x, y)
         preds = model(x)
-        total_loss, rmse, percent_loss = error_find(preds, y)
+        total_loss, rmse, percent_loss = error_find(preds, y.unsqueeze(1))
         errors.append(rmse)
 
         if epoch < 30 or epoch % 10 == 0:
@@ -98,7 +100,7 @@ def train_net_process(model, data, optimizer, criterion, epochs, show_plot):
         results_plot(y, preds)
 
 
-def train_net(model, data, epochs, show_plot=False):
+def train_net(model, data, epochs, show_plot=True):
     optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.99)
     criterion = torch.nn.MSELoss(reduction='sum')
     train_net_process(model, data, optimizer, criterion, epochs, show_plot)
@@ -118,13 +120,16 @@ def _make_data_xyz():
     # y = torch.tensor([[ex2_eqn(*p)] for p in x], dtype=dtype)
     data = pd.read_excel(r'C:\Users\maxim\OneDrive\Desktop\folder\diplom\data\parsing\companies_scores.xlsx')
     data = data[data['target'] != 0]
+    data['product'] = data['product']*100
+    data['tech'] = data['tech'] * 100
+    data['org'] = data['org'] * 100
     x = torch.tensor(data[['product','tech','org']].values, dtype=dtype)
     y = torch.tensor(data['target'].values, dtype=dtype)
 
     return TensorDataset(x, y)
 
 
-def train_create(batch_size=100):
+def train_create(batch_size=60):
     #inp_range = range(1, 7, 1)
     td = _make_data_xyz()
 
@@ -140,7 +145,7 @@ def test_create():
 if __name__ == '__main__':
     show_plots = True
     model = net_make()
-    # train_data = train_create()
-    # train_net(model, train_data, 500, show_plots)
+    train_data = train_create()
+    train_net(model, train_data, 500, show_plots)
     # test_data = test_create()
     # test_net(model, test_data, show_plots)
