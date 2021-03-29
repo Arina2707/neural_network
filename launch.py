@@ -117,7 +117,8 @@ def _make_data_xyz():
     # x = torch.tensor(list(xyz_vals), dtype=dtype)
     # y = torch.tensor([[ex2_eqn(*p)] for p in x], dtype=dtype)
     data = pd.read_excel(r'C:\Users\maxim\OneDrive\Desktop\folder\diplom\data\parsing\companies_scores.xlsx')
-    x = torch.tensor(data[[0,1,2]], dtype=dtype)
+    data = data[data['target'] != 0]
+    x = torch.tensor(data[['product','tech','org']].values, dtype=dtype)
     y = torch.tensor(data['target'].values, dtype=dtype)
 
     return TensorDataset(x, y)
@@ -139,7 +140,7 @@ def test_create():
 if __name__ == '__main__':
     show_plots = True
     model = net_make()
-    train_data = train_create()
-    train_net(model, train_data, 500, show_plots)
+    # train_data = train_create()
+    # train_net(model, train_data, 500, show_plots)
     # test_data = test_create()
     # test_net(model, test_data, show_plots)

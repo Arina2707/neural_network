@@ -56,7 +56,6 @@ def net_make():
             ('x', bell_make(2.5, 2, [1, 6])),
             ('y', bell_make(2.5, 2, [1, 6])),
             ('z', bell_make(2.5, 2, [1, 6])),
-            ('k', bell_make(2.5, 2, [1, 6]))
             ]
 
     out_vars = ['output']
