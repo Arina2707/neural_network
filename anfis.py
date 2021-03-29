@@ -167,7 +167,7 @@ class WeightedSumLayer(torch.nn.Module):
 
 
 class Net(torch.nn.Module):
-    def __init__(self, description, in_varsnames, out_varsnames, hybrid=False):
+    def __init__(self, description, in_varsnames, out_varsnames, hybrid=True):
         super(Net, self).__init__()
         self.description = description
         self.out_varnames = out_varsnames
