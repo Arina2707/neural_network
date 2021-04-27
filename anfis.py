@@ -22,6 +22,7 @@ class FuzzyVariable(torch.nn.Module):
     def mfs_num(self):
         return len(self.mfs)
 
+    @property
     def members(self):
         return self.mfs.items()
 
@@ -70,6 +71,16 @@ class FuzzyLayer(torch.nn.Module):
     def forward(self, x):
         assert x.shape[1] == self.vars_num, '{} is wrong number of input params'.format(self.vars_num)
         # concatenates on new dimension
+        print('MFs Vars')
+        for i, var in enumerate(self.vars.values()):
+            print(i)
+            print(var.members)
+            for name, mf in var.members:
+                rez = mf(x[0,0])
+                print(mf.print_params())
+                print(rez)
+            break
+
         preds = torch.stack([var(x[:, i:i + 1]) for i, var in enumerate(self.vars.values())], dim=1)
 
         return preds
@@ -209,9 +220,15 @@ class Net(torch.nn.Module):
 
     def forward(self, x):
         self.fuzzified = self.layer['fuzzify'](x)
+        print('Fuzzy layer:')
+        print(x)
+        print(self.fuzzified)
+
         self.initial_weights = self.layer['rules'](self.fuzzified)
         self.weights = F.normalize(self.initial_weights, p=1, dim=1)
+
         self.rule_tsk = self.layer['consequent'](x)
+
         preds = torch.bmm(self.rule_tsk, self.weights.unsqueeze(2).float())
         self.preds = preds.squeeze(2)
 

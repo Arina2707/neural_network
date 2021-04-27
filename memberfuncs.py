@@ -53,10 +53,16 @@ def bell_make(a, b, cs):
 
 def net_make():
     in_vars = [
-            ('x', bell_make(2.5, 2, [1, 6])),
-            ('y', bell_make(2.5, 2, [1, 6])),
-            ('z', bell_make(2.5, 2, [1, 6])),
+            ('x', bell_make(8.0, 2.0, [4.0, 22.0, 38.0])),
+            ('y', bell_make(22.0, 2.0, [1.0, 45.0, 90.0])),
+            ('z', bell_make(24.0, 2.0, [2.0, 50.0, 100.0])),
+            ('d', bell_make(24.0, 2.0, [2.0, 50.0, 100.0]))
             ]
+
+    # in_vars = [
+    #         ('x', gaussian_make(6.0, [2.0, -1.0, -6.0])),
+    #         ('y', gaussian_make(6.0, [4.0, -2.0, -8.0]))
+    #         ]
 
     out_vars = ['output']
     model = Net('Simple classifier', in_vars, out_vars)

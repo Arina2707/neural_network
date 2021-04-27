@@ -8,6 +8,9 @@ import pandas as pd
 
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+import os
+
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 dtype = torch.float
 
@@ -49,20 +52,20 @@ def error_find(preds, y_actual):
         rmse = torch.sqrt(total_loss).item()
         percent_loss = torch.mean(100. * torch.abs((preds - y_actual) / y_actual))
 
-    return total_loss, rmse, percent_loss
+    return rmse, percent_loss
 
 
-def test_net(model, data, show_plots=True):
+def test_net(model, data, show_plots=False):
     x, y = data.dataset.tensors
-
-    if show_plots:
-        memberfunc_allvars_plot(model, x)
-
-    print('Test model with {} cases'.format(x.shape[0]))
+    #
+    # if show_plots:
+    #     memberfunc_allvars_plot(model, x)
+    #
+    # print('Test model with {} cases'.format(x.shape[0]))
     preds = model(x)
-    total_loss, rmse, percent_loss = error_find(preds, y)
-    print('MSE {:.5f}, RMSE {:.5f}'.format(total_loss, rmse))
-
+    # total_loss, rmse, percent_loss = error_find(preds, y)
+    # print('MSE {:.5f}, RMSE {:.5f}'.format(total_loss, rmse))
+    print(preds)
     if show_plots:
         results_plot(y, preds)
 
@@ -72,26 +75,27 @@ def train_net_process(model, data, optimizer, criterion, epochs, show_plot):
     print('Training net with {} epochs and {} train cases'.format(epochs, data.dataset.tensors[0].shape[0]))
 
     for epoch in range(epochs):
+        print('Epoch: ', epoch)
+
         for x, y in data:
-            print(x.shape)
-            print(y.shape)
             preds = model(x)
             loss = criterion(y.unsqueeze(1), preds)
+            #errors.append(loss)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+
         x, y = data.dataset.tensors
-        print(x.shape)
-        print(y.shape)
         with torch.no_grad():
-            model.fit_coeffs(x, y)
+             model.fit_coeffs(x, y)
         preds = model(x)
-        total_loss, rmse, percent_loss = error_find(preds, y.unsqueeze(1))
+        rmse, percent_loss = error_find(preds, y.unsqueeze(1))
         errors.append(rmse)
 
-        if epoch < 30 or epoch % 10 == 0:
-            print('Epoch {:4d}. Errors: MSE {:.5f}, RMSE {:.5f}'.format(epoch, total_loss, rmse
-                                                                        ))
+        # if epoch < 30 or epoch % 10 == 0:
+        #     print('Epoch {:4d}. Errors: RMSE {:.5f}'.format(epoch, rmse))
+        # print(model.coeffs)
+
 
     if show_plot:
         errors_plot(errors)
@@ -114,38 +118,43 @@ def ex2_eqn(x, y, z, k):
     return output
 
 
-def _make_data_xyz():
-    # xyz_vals = itertools.product(inp_range, inp_range, inp_range, inp_range)
-    # x = torch.tensor(list(xyz_vals), dtype=dtype)
-    # y = torch.tensor([[ex2_eqn(*p)] for p in x], dtype=dtype)
-    data = pd.read_excel(r'C:\Users\maxim\OneDrive\Desktop\folder\diplom\data\parsing\companies_scores.xlsx')
-    data = data[data['target'] != 0]
-    data['product'] = data['product']*100
-    data['tech'] = data['tech'] * 100
-    data['org'] = data['org'] * 100
-    x = torch.tensor(data[['product','tech','org']].values, dtype=dtype)
-    y = torch.tensor(data['target'].values, dtype=dtype)
+def make_data_xyz():
+    # data = pd.read_excel(r'C:\Users\maxim\OneDrive\Desktop\folder\diplom\data\parsing\companies_scores.xlsx')
+    # data = data[data['target'] != 0]
+    # data['product'] = data['product']*100
+    # data['tech'] = data['tech'] * 100
+    # data['org'] = data['org'] * 100
+    # data['target'] = data['target'] * 100
+    #
+    # x = torch.tensor(data[['product','tech','org']].values, dtype=dtype)
+    # y = torch.tensor(data['target'].values, dtype=dtype)
+
+    ts = np.loadtxt("train_1.txt", usecols=[0,1,2,3,4])
+
+    X = ts[:, 0:4]
+    Y = ts[:, 4]
+
+    # ts = np.loadtxt("trainingSet_notmy.txt", usecols=[1,2,3])
+    #
+    # X = ts[:, 0:2]
+    # Y = ts[:, 2]
+
+    x = torch.tensor(X, dtype=dtype)
+    y = torch.tensor(Y, dtype=dtype)
 
     return TensorDataset(x, y)
 
 
-def train_create(batch_size=60):
-    #inp_range = range(1, 7, 1)
-    td = _make_data_xyz()
+def train_create(batch_size=9):
+    td = make_data_xyz()
 
     return DataLoader(td, batch_size=batch_size, shuffle=True)
-
-
-def test_create():
-    inp_range = np.arange(1.5, 6.5, 1)
-    td = _make_data_xyz(inp_range)
-    return DataLoader(td)
 
 
 if __name__ == '__main__':
     show_plots = True
     model = net_make()
     train_data = train_create()
-    train_net(model, train_data, 500, show_plots)
-    # test_data = test_create()
-    # test_net(model, test_data, show_plots)
+
+    train_net(model, train_data, 25, show_plots)
+    #test_net(model, train_data)
